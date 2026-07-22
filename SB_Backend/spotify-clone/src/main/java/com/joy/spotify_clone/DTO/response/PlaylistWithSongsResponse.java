@@ -61,6 +61,7 @@ public class PlaylistWithSongsResponse {
                     songInPlaylistResponse.setSongUrl(playlistSong.getSong().getSongUrl() != null ? baseUrl + playlistSong.getSong().getSongUrl() : null);
                     songInPlaylistResponse.setImageUrl(playlistSong.getSong().getImageUrl() != null? baseUrl + playlistSong.getSong().getImageUrl() : null);
                     songInPlaylistResponse.setPosition(playlistSong.getPosition());
+                    songInPlaylistResponse.setAddedAt(playlistSong.getAddedAt());
                     return songInPlaylistResponse;
                 })
                 .collect(Collectors.toList());

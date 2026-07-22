@@ -1,5 +1,6 @@
 package com.joy.spotify_clone.DTO.response;
 
+import com.joy.spotify_clone.entity.Song;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,18 @@ public class SongResponse {
     private LocalDateTime createdAt;
     private Long appUserId;
     private String appUserName;
+
+    public static SongResponse fromEntity(Song song, String baseUrl) {
+        SongResponse songResponse = new SongResponse();
+        songResponse.setId(song.getId());
+        songResponse.setTitle(song.getTitle());
+        songResponse.setArtist(song.getArtist());
+        songResponse.setSongUrl(song.getSongUrl() != null? baseUrl + song.getSongUrl() : null);
+        songResponse.setImageUrl(song.getImageUrl() != null? baseUrl + song.getImageUrl() : null);
+        songResponse.setCreatedAt(song.getCreatedAt());
+        songResponse.setAppUserId(song.getAppUser().getId());
+        songResponse.setAppUserName(song.getAppUser().getName());
+
+        return songResponse;
+    }
 }

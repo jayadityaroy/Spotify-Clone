@@ -28,7 +28,7 @@ public class PlaylistSong {
 
     @CreationTimestamp
     @Column(name = "added_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime addedAt;
 
     @Column(nullable = false)
     private Integer position; // Position of the song in the playlist
