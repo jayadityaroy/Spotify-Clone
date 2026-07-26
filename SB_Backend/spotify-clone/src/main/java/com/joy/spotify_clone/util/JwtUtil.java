@@ -1,5 +1,6 @@
 package com.joy.spotify_clone.util;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 @Component
 public class JwtUtil {
@@ -56,7 +58,22 @@ public class JwtUtil {
                 .compact();
     }
 
+    public Long extractId(String token){
+        return extractClaim(token, claims -> claims.get("id", Long.class));
+    }
 
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
 }
 
 /*
@@ -81,4 +98,23 @@ A refresh token has a longer expiration time because its job is to keep the user
 /*
 getSigningKey() -> This converts the secret string into a cryptographic key
  that can be used to sign and verify JWTs.
+ */
+
+/*
+extractId() :
+Takes a JWT token string as input.
+Extracts the "id" claim from the token.
+Returns that ID as a Long.
+
+extractClaim() :
+This is a generic helper method.
+It first gets all claims from the token.
+Then it applies whatever logic you pass in through claimsResolver.
+
+extractAllClaims() :
+Creates a JWT parser.
+Tells the parser to verify the token using your secret key.
+Builds the parser.
+Parses the signed JWT token.
+Returns the token’s payload as a Claims object.
  */
