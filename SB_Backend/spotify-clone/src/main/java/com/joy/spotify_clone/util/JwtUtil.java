@@ -62,9 +62,29 @@ public class JwtUtil {
         return extractClaim(token, claims -> claims.get("id", Long.class));
     }
 
+    public String extractName(String token){
+        return extractClaim(token, claims -> claims.get("name", String.class));
+    }
+
+    public String extractEmail(String token){
+        return extractClaim(token, claims -> claims.get("email", String.class));
+    }
+
+    public String extractRole(String token){
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    public String extractTokenType(String token){
+        return extractClaim(token, claims -> claims.get("type", String.class));
+    }
+
+    public Date extractExpiration(String token){
+        return extractClaim(token, Claims::getExpiration);
+    }
+
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
         final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+        return claimsResolver.apply(claims); // .apply(), apply whatever logic you pass in the lambda
     }
 
     private Claims extractAllClaims(String token) {
@@ -73,6 +93,22 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public Boolean isTokenExpired(String token){
+        return extractExpiration(token).before(new Date());
+    }
+
+    public Boolean validateToken(String token, String email){
+        final String extractedEmail = extractEmail(token);
+        return (extractedEmail.equals(email)) && !isTokenExpired(token);
+    }
+
+    public Boolean isAccessToken(String token){
+        return "ACCESS".equals(extractTokenType(token));
+    }
+    public Boolean isRefreshToken(String token){
+        return "REFRESH".equals(extractTokenType(token));
     }
 }
 
@@ -117,4 +153,12 @@ Tells the parser to verify the token using your secret key.
 Builds the parser.
 Parses the signed JWT token.
 Returns the token’s payload as a Claims object.
+ */
+
+/*
+// Method Reference notation:
+Claims::getExpiration
+
+// Is exactly equivalent to this Lambda expression:
+claims -> claims.getExpiration()
  */
