@@ -14,7 +14,7 @@ public class EmailServiceImpl implements EmailService {
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(EmailServiceImpl.class);
     @Autowired
     private JavaMailSender mailSender;
-    @Value("${app.frontend.url:http://localhost:4200}")
+    @Value("${app.frontend.url:http://localhost:4200}") // from application.prop: default url
     private String frontendUrl;
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -57,6 +57,9 @@ public class EmailServiceImpl implements EmailService {
                         + "Welcome to the Spotify Clone API!\n\n"
                         + "Your account has been created successfully.\n\n"
                         + "You can log in at: " + frontendUrl + "/login\n\n"
+                        + "Your temporary password is: " + password + "\n\n"
+                        + "Please log in using this password and change it immediately for security reasons.\n\n"
+                        + "If you didn't request this account, please ignore this email.\n\n"
                         + "Best regards,\n"
                         + "The Spotify Clone Team";
             message.setText(emailBody);
@@ -69,3 +72,11 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 }
+
+/*
+line 17: {$app.frontend.url:http://localhost:4200} means:
+- app.frontend.url is the property name in application.properties
+- http://localhost:4200 is the default value if the property is not set
+ */
+
+

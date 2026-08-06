@@ -32,4 +32,6 @@ public class AppUser {
     @UpdateTimestamp // automatically updates the field to the current time every time the entity is updated.
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+    @Column(name = "password", nullable = false)
+    private String password;
 }
