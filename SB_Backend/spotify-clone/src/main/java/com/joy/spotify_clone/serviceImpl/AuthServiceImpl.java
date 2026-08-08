@@ -1,9 +1,12 @@
 package com.joy.spotify_clone.serviceImpl;
 
+import com.joy.spotify_clone.DTO.request.LoginUserRequest;
 import com.joy.spotify_clone.DTO.request.RegisterUserRequest;
+import com.joy.spotify_clone.DTO.response.AppUserResponse;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.entity.AppUser;
 import com.joy.spotify_clone.exception.EmailAlreadyExistException;
+import com.joy.spotify_clone.exception.InvalidCredentialsException;
 import com.joy.spotify_clone.repository.AppUserRepository;
 import com.joy.spotify_clone.service.AuthService;
 import com.joy.spotify_clone.service.EmailService;
@@ -34,13 +37,29 @@ public class AuthServiceImpl implements AuthService {
         AppUser appUser = new AppUser();
         appUser.setName(request.getName());
         appUser.setEmail(request.getEmail());
-        appUser.setPassword(passwordEncoder.encode(tempPassword));
+        appUser.setPassword(passwordEncoder.encode(tempPassword)); // hashed the password before saving
         String role = request.getRole();
         appUser.setRole(role != null ? role: "USER");
         appUserRepository.save(appUser);
 
         emailService.sendWelcomeEmail(request.getEmail(), request.getName(), tempPassword);
         return new MessageResponse("Welcome to Spotify Clone !! Your account has been created successfully. Please check your email for the temporary password.");
+    }
+
+    @Override
+    public AppUserResponse loginUser(LoginUserRequest request) {
+        AppUser appUser = appUserRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+        if(!passwordEncoder.matches(request.getPassword(), appUser.getPassword())){
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        String accessToken = jwtUtil.generateAccessToken(appUser.getId(), appUser.getName(), appUser.getEmail(), appUser.getRole());
+        String refreshToken = jwtUtil.generateRefreshToken(appUser.getId(), appUser.getEmail());
+        appUser.setRefreshToken(refreshToken);
+        appUserRepository.save(appUser);
+        return AppUserResponse.fromEntity(appUser, accessToken, refreshToken);
     }
 
     private String generateTemporaryPassword() {
@@ -53,6 +72,26 @@ public class AuthServiceImpl implements AuthService {
         return password.toString();
     }
 }
+/*
+Working of registerUser():
+1. Check if email already exists
+2. if email doesn't exist in db: Generate temporary password, using generateTemporaryPassword()
+3. Create a new AppUser
+4. Save user to database
+5. Send welcome email
+6. Return success response
+ */
+/*
+working of loginUser():
+1. Find user by email
+2. Verify password: The raw password from the login request is compared with the hashed password stored in the database.
+3. Generate access token
+4. Generate refresh token
+5. Save refresh token in user record:
+When access token expires, client sends refresh token to get a new one
+Server checks stored refresh token and issues a new access token
+6. return response with tokens
+ */
 
 /*
 Working of generateTemporaryPassword():
@@ -63,3 +102,5 @@ This string serves as the pool of characters from which the temporary password w
 4. A loop runs 10 times (for a password length of 10 characters). In each iteration, a random index is generated (0-chars.length()-1) using `random.nextInt(chars.length())`,
 which selects a character from the `chars` string and the selected character is added in the 'password' StringBuilder.
  */
+
+

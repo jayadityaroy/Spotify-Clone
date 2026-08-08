@@ -1,6 +1,8 @@
 package com.joy.spotify_clone.controller;
 
+import com.joy.spotify_clone.DTO.request.LoginUserRequest;
 import com.joy.spotify_clone.DTO.request.RegisterUserRequest;
+import com.joy.spotify_clone.DTO.response.AppUserResponse;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.service.AuthService;
 import jakarta.validation.Valid;
@@ -23,4 +25,12 @@ public class AuthController {
         MessageResponse response = authService.registerUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
+    @PostMapping("/loginUser")
+    public ResponseEntity<AppUserResponse> loginUser(@Valid @RequestBody LoginUserRequest request){
+        AppUserResponse response = authService.loginUser(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
 }

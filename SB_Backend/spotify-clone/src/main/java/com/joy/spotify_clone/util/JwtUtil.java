@@ -46,9 +46,9 @@ public class JwtUtil {
         return createToken(claims, email, refreshTokenExpiration);
     }
 
-    private String createToken(Map<String, Object> claims, String subject, Long accessTokenExpiration) {
+    private String createToken(Map<String, Object> claims, String subject, Long tokenExpiration) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
+        Date expiryDate = new Date(now.getTime() + tokenExpiration);
         return Jwts.builder()
                 .claims(claims)
                 .subject(subject)
