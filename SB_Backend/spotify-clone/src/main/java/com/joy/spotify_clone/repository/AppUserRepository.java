@@ -11,6 +11,8 @@ import java.util.Optional;
 @Repository
 public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
+    Optional<AppUser> findByRefreshToken(String refreshToken);
+
     boolean existsByEmail(String email);
 
     Optional<AppUser> findByEmail(String email);

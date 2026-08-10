@@ -1,6 +1,8 @@
 package com.joy.spotify_clone.controller;
 
+import com.joy.spotify_clone.DTO.request.ForgotPasswordRequest;
 import com.joy.spotify_clone.DTO.request.LoginUserRequest;
+import com.joy.spotify_clone.DTO.request.RefreshTokenRequest;
 import com.joy.spotify_clone.DTO.request.RegisterUserRequest;
 import com.joy.spotify_clone.DTO.response.AppUserResponse;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
@@ -29,6 +31,18 @@ public class AuthController {
     @PostMapping("/loginUser")
     public ResponseEntity<AppUserResponse> loginUser(@Valid @RequestBody LoginUserRequest request){
         AppUserResponse response = authService.loginUser(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/refreshAccessToken")
+    public ResponseEntity<AppUserResponse> refreshAccessToken(@Valid @RequestBody RefreshTokenRequest request){
+        AppUserResponse response = authService.refreshAccessToken(request);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/forgotPassword")
+    public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request){
+        MessageResponse response = authService.forgotPassword(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

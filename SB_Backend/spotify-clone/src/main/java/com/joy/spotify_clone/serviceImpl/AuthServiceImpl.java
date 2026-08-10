@@ -1,12 +1,15 @@
 package com.joy.spotify_clone.serviceImpl;
 
+import com.joy.spotify_clone.DTO.request.ForgotPasswordRequest;
 import com.joy.spotify_clone.DTO.request.LoginUserRequest;
+import com.joy.spotify_clone.DTO.request.RefreshTokenRequest;
 import com.joy.spotify_clone.DTO.request.RegisterUserRequest;
 import com.joy.spotify_clone.DTO.response.AppUserResponse;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.entity.AppUser;
 import com.joy.spotify_clone.exception.EmailAlreadyExistException;
 import com.joy.spotify_clone.exception.InvalidCredentialsException;
+import com.joy.spotify_clone.exception.ResourceNotFoundException;
 import com.joy.spotify_clone.repository.AppUserRepository;
 import com.joy.spotify_clone.service.AuthService;
 import com.joy.spotify_clone.service.EmailService;
@@ -60,6 +63,35 @@ public class AuthServiceImpl implements AuthService {
         appUser.setRefreshToken(refreshToken);
         appUserRepository.save(appUser);
         return AppUserResponse.fromEntity(appUser, accessToken, refreshToken);
+    }
+
+    @Override
+    public AppUserResponse refreshAccessToken(RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken();
+        String email = jwtUtil.extractEmail(refreshToken);
+
+        AppUser appUser = appUserRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid refresh token"));
+
+        if(!jwtUtil.validateToken(refreshToken, email)){
+            throw new InvalidCredentialsException("Invalid refresh token");
+        }
+
+        String newAccessToken = jwtUtil.generateAccessToken(appUser.getId(), appUser.getName(), appUser.getEmail(), appUser.getRole());
+
+        return AppUserResponse.fromEntity(appUser, newAccessToken, refreshToken);
+    }
+
+    @Override
+    public MessageResponse forgotPassword(ForgotPasswordRequest request) {
+        AppUser appUser = appUserRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: "+request.getEmail()));
+
+        String tempPassword = generateTemporaryPassword();
+        appUser.setPassword(passwordEncoder.encode(tempPassword));
+        appUserRepository.save(appUser);
+        emailService.sendCredentialsEmail(request.getEmail(), appUser.getName(), tempPassword);
+        return new MessageResponse("Temporary password has been sent to your email.");
     }
 
     private String generateTemporaryPassword() {
