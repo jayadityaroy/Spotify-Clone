@@ -87,7 +87,7 @@ So only a valid access token can authenticate the request.
 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(email, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_"+role)));
 An authenticated user object for Spring Security.
 Parts inside:
-    email = principal, meaning the user identity
+    email = principal, meaning the user identity, used to fetch the user later (see in the AppUserServiceImpl)
     null = password is not needed here because JWT already authenticated the user
     Collections.singletonList(...) = a list containing one role
     new SimpleGrantedAuthority("ROLE_"+role) = converts role into Spring Security format

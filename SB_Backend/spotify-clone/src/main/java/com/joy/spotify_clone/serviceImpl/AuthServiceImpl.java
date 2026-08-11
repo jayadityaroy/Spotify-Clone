@@ -69,16 +69,13 @@ public class AuthServiceImpl implements AuthService {
     public AppUserResponse refreshAccessToken(RefreshTokenRequest request) {
         String refreshToken = request.getRefreshToken();
         String email = jwtUtil.extractEmail(refreshToken);
-
         AppUser appUser = appUserRepository.findByRefreshToken(refreshToken)
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid refresh token"));
 
         if(!jwtUtil.validateToken(refreshToken, email)){
             throw new InvalidCredentialsException("Invalid refresh token");
         }
-
         String newAccessToken = jwtUtil.generateAccessToken(appUser.getId(), appUser.getName(), appUser.getEmail(), appUser.getRole());
-
         return AppUserResponse.fromEntity(appUser, newAccessToken, refreshToken);
     }
 
@@ -86,7 +83,6 @@ public class AuthServiceImpl implements AuthService {
     public MessageResponse forgotPassword(ForgotPasswordRequest request) {
         AppUser appUser = appUserRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: "+request.getEmail()));
-
         String tempPassword = generateTemporaryPassword();
         appUser.setPassword(passwordEncoder.encode(tempPassword));
         appUserRepository.save(appUser);
@@ -123,6 +119,25 @@ working of loginUser():
 When access token expires, client sends refresh token to get a new one
 Server checks stored refresh token and issues a new access token
 6. return response with tokens
+ */
+
+/*
+Working of refreshAccessToken():
+1. Extract the refresh token from the request
+2. Extract email from refresh token
+3. Find user by refresh token
+4. Validate refresh token: Check if the token is valid and not expired
+5. Generate new access token
+6. Return response with new access token and existing refresh token
+ */
+
+/*
+Working of forgotPassword():
+1. Find user by email
+2. Generate temporary password using generateTemporaryPassword()
+3. Update user's password in the database with the hashed temporary password
+4. Send email to user with the temporary password
+5. Return success response
  */
 
 /*
