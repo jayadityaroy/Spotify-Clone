@@ -2,14 +2,22 @@ package com.joy.spotify_clone.serviceImpl;
 
 import com.joy.spotify_clone.DTO.request.AppUserRequest;
 import com.joy.spotify_clone.DTO.response.AppUserResponse;
+import com.joy.spotify_clone.DTO.response.PaginatedResponse;
 import com.joy.spotify_clone.entity.AppUser;
 import com.joy.spotify_clone.repository.AppUserRepository;
 import com.joy.spotify_clone.service.AppUserService;
 import jakarta.validation.Valid;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Service
 public class AppUserServiceImpl implements AppUserService {
@@ -44,6 +52,34 @@ public class AppUserServiceImpl implements AppUserService {
         }
 
         AppUser updatedUser = appUserRepository.save(appUser);
+        return AppUserResponse.fromEntity(updatedUser, null, null);
+    }
+
+    @Override
+    public PaginatedResponse<AppUserResponse> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AppUser> userPage = appUserRepository.findAll(pageable);
+
+        List<AppUserResponse> userResponses = userPage.getContent().stream()
+                .map(user -> AppUserResponse.fromEntity(user, null, null))
+                .collect(Collectors.toList());
+        return new PaginatedResponse<>(userResponses, userPage.getNumber(), userPage.getSize(), userPage.getTotalElements(), userPage.getTotalPages(), userPage.isLast(), userPage.isFirst());
+    }
+
+    @Override
+    public AppUserResponse updateUserRole(Long userId, String role, String email) {
+        AppUser adminUser = appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if(!"ADMIN".equals(adminUser.getRole())){
+            throw new RuntimeException("Only admin can update user roles");
+        }
+
+        AppUser userToUpdate = appUserRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        String standardizedRole = role.trim().toUpperCase();
+        userToUpdate.setRole(standardizedRole);
+        AppUser updatedUser = appUserRepository.save(userToUpdate);
         return AppUserResponse.fromEntity(updatedUser, null, null);
     }
 }

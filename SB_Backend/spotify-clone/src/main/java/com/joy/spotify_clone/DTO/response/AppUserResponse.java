@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+// DTO class for sending user information in response
 public class AppUserResponse {
     private Long id;
     private String name;

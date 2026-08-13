@@ -9,6 +9,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+// This class represents a paginated response for API endpoints that return a list of items.
 public class PaginatedResponse<T> {
     private List<T> content;
     private int page;

@@ -4,6 +4,8 @@ import com.joy.spotify_clone.DTO.request.AppUserRequest;
 import com.joy.spotify_clone.DTO.response.AppUserResponse;
 import com.joy.spotify_clone.service.AppUserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +29,30 @@ public class AppUserController {
         AppUserResponse updatedProfile = appUserService.updateUserProfile(appUserRequest, email);
         return new ResponseEntity<>(updatedProfile, HttpStatus.OK);
     }
+    @GetMapping("/getAllUsers")
+    public ResponseEntity<?> getAllUsers(@RequestParam(defaultValue = "0") int page,
+                                         @RequestParam(defaultValue = "10") int size,
+                                         Authentication authentication) {
+        String email = authentication.getName(); // not used till now
+        return new ResponseEntity<>(appUserService.getAllUsers(page, size), HttpStatus.OK);
+    }
+    @PatchMapping("/updateUserRole/{userId}")
+    public ResponseEntity<AppUserResponse> updateUserRole(
+            @PathVariable Long userId,
+            @RequestParam @NotBlank(message = "Role cannot be blank")
+            @Pattern(regexp = "^(USER|ADMIN)$", message = "Role must be either USER or ADMIN") String role,
+            Authentication authentication){
+        String email = authentication.getName();
+        AppUserResponse response = appUserService.updateUserRole(userId, role, email);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
 /*
 Working of getUserProfile method:
 1. The method is mapped to the GET request at the endpoint "/getUserProfile".
 2. It takes an Authentication object as a parameter, which contains the details of the currently authenticated user.
-3. The email of the authenticated user is retrieved using authentication.getName(). // email was set as the principal in JwtAuthenticationFilter while setting the authentication in the SecurityContextHolder.
+3. The email of the authenticated user is retrieved using authentication.getName().
+// email was set as the principal in JwtAuthenticationFilter while setting the authentication in the SecurityContextHolder.
 // this will prevent users from accessing other users' profiles, as the email is extracted from the authenticated user's token.
 4. The getUserProfile method of the appUserService is called with the extracted email to fetch the user's profile information.
 5. The retrieved AppUserResponse object is then returned in the response.
