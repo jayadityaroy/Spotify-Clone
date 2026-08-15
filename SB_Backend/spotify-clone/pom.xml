@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?><!--pom.xml file is to talk to Maven -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.joy</groupId>
 	<artifactId>spotify-clone</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1-SNAPSHOT</version><!--SNAPSHOT version for development/developing, RELEASE for production/developed/released -->
 	<name/>
 	<description/>
 	<url/>
@@ -106,12 +106,23 @@
 		</dependency>
 	</dependencies>
 	<build>
+		<!--Plugins = tools that do work during the build process itself,
+		they don't end up inside your running app, they help produce your running app-->
+		<!--Maven's build lifecycle (compile → test → package → install) is basically empty by default,
+		it doesn't actually know how to compile Java or package a JAR.
+		Plugins are what give each phase its actual behavior.-->
 		<plugins>
+			<!--spring-boot-maven-plugin's job = packaging-->
+			<!---->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<excludes>
+						<!--it's telling this plugin (spring-boot-maven-plugin): "don't bundle Lombok into the final JAR."
+						Lombok is only used to generate boilerplate (getters/setters from @Data) at compile time,
+						your app doesn't need Lombok's code to actually run, so shipping it would just be dead weight-->
+						<!--"Hey spring-boot-maven-plugin, when you do your job of bundling everything into one fat JAR — here's a rule: skip Lombok. Don't put it in the final package."-->
 						<exclude>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
@@ -123,3 +134,24 @@
 	</build>
 
 </project>
+<!--
+Use of spring-boot-maven-plugin and what makes the "exclude" rule relevant:
+Regular mvn package in a normal Java project just creates a plain JAR — your classes zipped up,
+nothing fancy. But that plain JAR can't run standalone,
+because it doesn't include your dependencies (Spring, JWT libs, etc.) inside it.
+
+spring-boot-maven-plugin does something extra called repackaging.
+It takes that plain JAR and wraps it into a special executable "fat JAR" — one that contains:
+	Your compiled classes
+	All your dependency JARs, nested inside it
+	A special manifest so java -jar app.jar knows how to boot the whole thing
+
+So more precisely: the exclude rule doesn't apply to "packaging" in general — it applies specifically to this repackage step,
+where the plugin decides which dependencies get physically copied into that fat JAR.
+Lombok gets left out of that copy list.
+
+Why this distinction matters
+If you ran plain mvn package (without Spring Boot's plugin),
+Lombok wouldn't even be a question — a plain JAR doesn't bundle dependencies at all, fat or not.
+The exclude rule only makes sense because this specific plugin's whole purpose is stuffing dependencies into the JAR.
+-->
