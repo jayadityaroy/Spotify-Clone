@@ -61,12 +61,14 @@ Working of getSong():
    - Content-Disposition header tells the browser how to handle the file:
         - "inline" suggests that the browser should try to display the file within the page if possible.
         - "filename=\"" + fileName + "\"" specifies the name of the file being sent, which can be used by the browser when saving the file.
-        (Note: The "inline" disposition is used here to allow the browser to play the song directly if it supports it, rather than forcing a download. If you want to force a download, you can change "inline" to "attachment".)
+        (Note: The "inline" disposition is used here to allow the browser to play the song directly if it supports it,
+        rather than forcing a download. If you want to force a download, you can change "inline" to "attachment".)
    - The body of the response contains the loaded Resource (the song file).
 5. If the file is not found or any other exception occurs, a ResponseEntity is created with the following properties:
    - HTTP status code 404 (Not Found)
    - Content type set to MediaType.APPLICATION_JSON, indicating that the response contains JSON data (the error message).
-   - The body of the response contains a JSON object with an "error" field set to "File not found" and a "message" field containing the exception message."attachment; filename=\"" + fileName + "\""
+   - The body of the response contains a JSON object with an "error" field set to "File not found" and
+   a "message" field containing the exception message."attachment; filename=\"" + fileName + "\""
  */
 /*
 Working of getImage():

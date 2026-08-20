@@ -92,7 +92,7 @@ public class FileHandlerUtil {
 
     public String getFileExtension(String fileName){
         if(fileName != null && fileName.contains(".")){
-            return fileName.substring(fileName.lastIndexOf(".") + 1);
+            return fileName.substring(fileName.lastIndexOf("."));
         }
         return null;
     }
