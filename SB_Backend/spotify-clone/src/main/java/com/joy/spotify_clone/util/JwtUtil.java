@@ -51,7 +51,7 @@ public class JwtUtil {
         Date expiryDate = new Date(now.getTime() + tokenExpiration);
         return Jwts.builder()
                 .claims(claims)
-                .subject(subject)
+                .subject(subject) // subject == email
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())

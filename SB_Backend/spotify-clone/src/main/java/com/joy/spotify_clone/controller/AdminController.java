@@ -10,10 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -35,5 +32,15 @@ public class AdminController {
         SongRequest request = new SongRequest(title, artist);
         SongResponse response = songService.addSong(request, songFile, imageFile, email);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/getAllSongs")
+    public ResponseEntity<?> getAllSongs(
+            @RequestParam(required = false) Long userId, // search parameter for filtering songs by userId
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) // search parameter for filtering songs by title or artist
+    {
+        return new ResponseEntity<>(songService.getAllSongs(userId, page, size, search), HttpStatus.OK);
     }
 }
