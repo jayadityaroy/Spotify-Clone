@@ -1,12 +1,14 @@
 package com.joy.spotify_clone.serviceImpl;
 
 import com.joy.spotify_clone.DTO.request.SongRequest;
+import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.DTO.response.PaginatedResponse;
 import com.joy.spotify_clone.DTO.response.SongResponse;
 import com.joy.spotify_clone.entity.AppUser;
 import com.joy.spotify_clone.entity.Song;
 import com.joy.spotify_clone.repository.AppUserRepository;
 import com.joy.spotify_clone.repository.PlaylistRepository;
+import com.joy.spotify_clone.repository.PlaylistSongRepository;
 import com.joy.spotify_clone.repository.SongRepository;
 import com.joy.spotify_clone.service.SongService;
 import com.joy.spotify_clone.util.FileHandlerUtil;
@@ -30,7 +32,7 @@ public class SongServiceImpl implements SongService {
     @Autowired
     private AppUserRepository appUserRepository;
     @Autowired
-    private PlaylistRepository playlistRepository;
+    private PlaylistSongRepository playlistSongRepository;
 
     // GenericGeminiService
 
@@ -87,6 +89,59 @@ public class SongServiceImpl implements SongService {
         );
     }
 
+    @Override
+    public SongResponse getSongById(Long id) {
+        Song song = songRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Song not found with id: " + id));
+        return SongResponse.fromEntity(song, baseUrl);
+    }
+
+    @Override
+    public SongResponse updateSong(Long id, SongRequest request, MultipartFile songFile, MultipartFile imageFile, String email) {
+        Song song = validateSongAccess(id, email);
+        updateSongMetaData(song, request);
+        if(songFile != null && !songFile.isEmpty()){
+            deleteOldSongFile(song.getSongUrl());
+            String uniqueId = UUID.randomUUID().toString();
+            String newSongUrl = processSongFile(songFile, uniqueId);
+            song.setSongUrl(newSongUrl);
+        }
+        if(imageFile != null && !imageFile.isEmpty()){
+            deleteOldImageFile(song.getImageUrl());
+            String uniqueId = UUID.randomUUID().toString();
+            String newImageUrl = processImageFile(imageFile, uniqueId);
+            song.setImageUrl(newImageUrl);
+        }
+        Song updatedSong = songRepository.save(song);
+        return SongResponse.fromEntity(updatedSong, baseUrl);
+    }
+
+    @Override
+    public MessageResponse deleteSong(Long songId, String email) {
+        Song song = validateSongAccess(songId, email);
+        playlistSongRepository.deleteBySong_Id(songId);
+        deleteSongFiles(song);
+        songRepository.delete(song);
+        return new MessageResponse("Song deleted successfully.");
+    }
+
+    private AppUser getUserByEmail(String email) {
+        return appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+    private void updateSongMetaData(Song song, SongRequest request) {
+        song.setTitle(request.getTitle());
+        song.setArtist(request.getArtist());
+    }
+
+    private String processSongFile(MultipartFile songFile, String uniqueId) {
+        String songExtension = fileHandlerUtil.getFileExtension(songFile.getOriginalFilename());
+        String songFileName = uniqueId + songExtension;
+        fileHandlerUtil.saveSongFileWithName(songFile, songFileName);
+        return "/api/file/song/" + songFileName;
+    }
+
     private String processImageFile(MultipartFile imageFile, String uniqueId) {
         if(imageFile == null || imageFile.isEmpty()){
             return null;
@@ -97,21 +152,39 @@ public class SongServiceImpl implements SongService {
         return "/api/file/image/" + imageFileName; // Return the URL for accessing the image file using the endpoint defined in FileController
     }
 
-    private String processSongFile(MultipartFile songFile, String uniqueId) {
-        String songExtension = fileHandlerUtil.getFileExtension(songFile.getOriginalFilename());
-        String songFileName = uniqueId + songExtension;
-        fileHandlerUtil.saveSongFileWithName(songFile, songFileName);
-        return "/api/file/song/" + songFileName;
+    private void deleteOldSongFile(String songUrl) {
+        if(songUrl != null){
+            String fileName = fileHandlerUtil.extractFileName(songUrl);
+            if(fileName != null){
+                fileHandlerUtil.deleteSongFile(fileName);
+            }
+        }
     }
 
-    private void updateSongMetaData(Song song, SongRequest request) {
-        song.setTitle(request.getTitle());
-        song.setArtist(request.getArtist());
+    private void deleteOldImageFile(String imageUrl) {
+        if(imageUrl != null){
+            String fileName = fileHandlerUtil.extractFileName(imageUrl);
+            if(fileName != null){
+                fileHandlerUtil.deleteImageFile(fileName);
+            }
+        }
     }
 
-    private AppUser getUserByEmail(String email) {
-        return appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    private Song validateSongAccess(Long id, String email) {
+        Song song = songRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Song not found with id: " + id));
+        AppUser appUser = getUserByEmail(email);
+        boolean isOwner = song.getAppUser().getId().equals(appUser.getId());
+        boolean isAdmin = "ADMIN".equals(appUser.getRole());
+        if(!isOwner && !isAdmin){
+            throw new RuntimeException("You do not have permission to update this song.");
+        }
+        return song;
+    }
+
+    private void deleteSongFiles(Song song) {
+        deleteOldSongFile(song.getSongUrl());
+        deleteOldImageFile(song.getImageUrl());
     }
 }
 /*

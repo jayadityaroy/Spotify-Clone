@@ -1,6 +1,7 @@
 package com.joy.spotify_clone.controller;
 
 import com.joy.spotify_clone.DTO.request.SongRequest;
+import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.DTO.response.SongResponse;
 import com.joy.spotify_clone.service.SongService;
 import jakarta.validation.constraints.NotBlank;
@@ -37,10 +38,34 @@ public class AdminController {
     @GetMapping("/getAllSongs")
     public ResponseEntity<?> getAllSongs(
             @RequestParam(required = false) Long userId, // search parameter for filtering songs by userId
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "0") int page, // since no explicit name is provided, the parameter name will be "page" by default
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search) // search parameter for filtering songs by title or artist
     {
         return new ResponseEntity<>(songService.getAllSongs(userId, page, size, search), HttpStatus.OK);
+    }
+
+    @GetMapping("/getSongById/{songId}")
+    public ResponseEntity<SongResponse> getSongById(@PathVariable Long songId){
+        return new ResponseEntity<>(songService.getSongById(songId), HttpStatus.OK);
+    }
+    @PutMapping("/updateSong/{songId}")
+    public ResponseEntity<SongResponse> updateSong(
+            @PathVariable Long songId,
+            @RequestParam("title") @NotBlank(message = "Title is required") @Size(max = 100, message = "Title must be at most 100 characters") String title,
+            @RequestParam("artist") @NotBlank(message = "Artist is required") @Size(max = 100, message = "Artist must be at most 100 characters") String artist,
+            @RequestParam("songFile")MultipartFile songFile,
+            @RequestParam(name = "imageFile", required = false) MultipartFile imageFile,
+            Authentication authentication){
+        String email = authentication.getName();
+        SongRequest request = new SongRequest(title, artist);
+        SongResponse response = songService.updateSong(songId, request, songFile, imageFile, email);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/deleteSong/{songId}")
+    public ResponseEntity<MessageResponse> deleteSong(@PathVariable Long songId, Authentication authentication){
+        String email = authentication.getName();
+        return new ResponseEntity<>(songService.deleteSong(songId, email), HttpStatus.OK);
     }
 }
