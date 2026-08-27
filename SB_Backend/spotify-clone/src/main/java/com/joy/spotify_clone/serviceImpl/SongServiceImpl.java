@@ -3,6 +3,7 @@ package com.joy.spotify_clone.serviceImpl;
 import com.joy.spotify_clone.DTO.request.SongRequest;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.DTO.response.PaginatedResponse;
+import com.joy.spotify_clone.DTO.response.SongAiInsightsResponse;
 import com.joy.spotify_clone.DTO.response.SongResponse;
 import com.joy.spotify_clone.entity.AppUser;
 import com.joy.spotify_clone.entity.Song;
@@ -10,6 +11,7 @@ import com.joy.spotify_clone.repository.AppUserRepository;
 import com.joy.spotify_clone.repository.PlaylistRepository;
 import com.joy.spotify_clone.repository.PlaylistSongRepository;
 import com.joy.spotify_clone.repository.SongRepository;
+import com.joy.spotify_clone.service.GenericGeminiService;
 import com.joy.spotify_clone.service.SongService;
 import com.joy.spotify_clone.util.FileHandlerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +35,8 @@ public class SongServiceImpl implements SongService {
     private AppUserRepository appUserRepository;
     @Autowired
     private PlaylistSongRepository playlistSongRepository;
-
-    // GenericGeminiService
+    @Autowired
+    private GenericGeminiService geminiService;
 
     @Value("${app.base.url}")
     private String baseUrl;
@@ -125,6 +127,14 @@ public class SongServiceImpl implements SongService {
         return new MessageResponse("Song deleted successfully.");
     }
 
+    @Override
+    public SongAiInsightsResponse getSongAiInsights(Long songId) {
+        Song song = songRepository.findById(songId)
+                .orElseThrow(() -> new RuntimeException("Song not found with id: " + songId));
+        String prompt = buildSongAnalysisPrompt(song);
+        return geminiService.generateContent(prompt, SongAiInsightsResponse.class);
+    }
+
     private AppUser getUserByEmail(String email) {
         return appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
@@ -185,6 +195,31 @@ public class SongServiceImpl implements SongService {
     private void deleteSongFiles(Song song) {
         deleteOldSongFile(song.getSongUrl());
         deleteOldImageFile(song.getImageUrl());
+    }
+    private String buildSongAnalysisPrompt(Song song){
+        return String.format("""
+                Analyze the song '%s' by '%s' and provide detailed insights in JSON format.
+                
+                Return a JSON object with the following structure:
+                {
+                    "analysis": "A detailed 2-3 sentence analysis of the track's musical characteristics, production quality, and emotional
+                    impact",
+                    "moods": ["List", "of", "4-6", "mood", "keywords"],
+                    "genre": "Primary genre classification",
+                    "tempo": 120,
+                    "key": "Musical key (e.g., C Major, D Minor)",
+                    "energy": 7,
+                    "similarArtists": ["List", "of", "4-6", "similar", "artists"],
+                    "recommendedFor": "A 1-2 sentence recommendation about when and where to listen to this song"
+                }
+                
+                Important:
+                - The 'tempo' should be an estimated BPM (beats per minute) between 60-200
+                - The 'energy' should be a rating from 1-10
+                - Base your analysis on the artist's typical style and the song title
+                - Be creative but realistic
+                - Return ONLY the JSON object, no additional text
+                """, song.getTitle(), song.getArtist());
     }
 }
 /*

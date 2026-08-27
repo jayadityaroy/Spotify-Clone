@@ -2,6 +2,7 @@ package com.joy.spotify_clone.service;
 
 import com.joy.spotify_clone.DTO.request.SongRequest;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
+import com.joy.spotify_clone.DTO.response.SongAiInsightsResponse;
 import com.joy.spotify_clone.DTO.response.SongResponse;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,4 +16,6 @@ public interface SongService {
     SongResponse updateSong(Long songId, SongRequest request, MultipartFile songFile, MultipartFile imageFile, String email);
 
     MessageResponse deleteSong(Long songId, String email);
+
+    SongAiInsightsResponse getSongAiInsights(Long songId);
 }
