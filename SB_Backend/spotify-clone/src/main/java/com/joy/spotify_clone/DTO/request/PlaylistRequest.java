@@ -15,5 +15,5 @@ public class PlaylistRequest {
     private String name;
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
-    private Boolean isPrivate;
+    private Boolean isPublic;
 }

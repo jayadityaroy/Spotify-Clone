@@ -1,0 +1,46 @@
+package com.joy.spotify_clone.controller;
+
+import com.joy.spotify_clone.DTO.request.PlaylistRequest;
+import com.joy.spotify_clone.DTO.response.PlaylistResponse;
+import com.joy.spotify_clone.service.PlaylistService;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+@RequestMapping("/api/playlist")
+@Validated
+public class PlaylistController {
+    @Autowired
+    private PlaylistService playlistService;
+
+    @PostMapping("/createPlaylist")
+    public ResponseEntity<PlaylistResponse> createPlaylist(
+            @RequestParam("name") @NotBlank(message = "Playlist name is required") @Size(max = 100, message = "Playlist name cannot exceed 100 characters") String name,
+            @RequestParam(value = "description", required = false) @Size(max = 500, message = "Playlist description cannot exceed 500 characters") String description,
+            @RequestParam(value = "isPublic", defaultValue = "false") Boolean isPublic,
+            @RequestParam(value = "imageFile", required = true) MultipartFile imageFile,
+            Authentication authentication
+            ){
+        String email = authentication.getName();
+        PlaylistRequest request = new PlaylistRequest(name, description, isPublic);
+        PlaylistResponse response = playlistService.createPlaylist(request, imageFile, email);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+    @PatchMapping("/updatePlaylistPrivacy/{id}")
+    public ResponseEntity<PlaylistResponse> updatePlaylistPrivacy(
+            @PathVariable Long id,
+            @RequestParam("isPublic") Boolean isPublic,
+            Authentication authentication)
+    {
+        String email = authentication.getName();
+        PlaylistResponse response = playlistService.updatePlaylistPrivacy(id, isPublic, email);
+        return ResponseEntity.ok(response);
+    }
+}
