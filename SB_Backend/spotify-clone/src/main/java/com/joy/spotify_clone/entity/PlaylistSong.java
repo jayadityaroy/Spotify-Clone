@@ -34,7 +34,7 @@ public class PlaylistSong {
     private Integer position; // Position of the song in the playlist
 }
 /*
-Default Fetch Types for JPA Relationships:
+Relations   Default FetchType
 @ManyToOne	EAGER
 @OneToOne	EAGER
 @OneToMany	LAZY

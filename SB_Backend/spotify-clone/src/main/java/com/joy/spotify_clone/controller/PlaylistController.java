@@ -1,6 +1,7 @@
 package com.joy.spotify_clone.controller;
 
 import com.joy.spotify_clone.DTO.request.PlaylistRequest;
+import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.DTO.response.PlaylistResponse;
 import com.joy.spotify_clone.service.PlaylistService;
 import jakarta.validation.constraints.NotBlank;
@@ -41,6 +42,16 @@ public class PlaylistController {
     {
         String email = authentication.getName();
         PlaylistResponse response = playlistService.updatePlaylistPrivacy(id, isPublic, email);
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/addSongToPlaylist/{playlistId}")
+    public ResponseEntity<MessageResponse> addSongToPlaylist(
+            @PathVariable Long playlistId,
+            @RequestParam("songId") Long songId,
+            Authentication authentication
+    ){
+        String email = authentication.getName();
+        MessageResponse response = playlistService.addSongToPlaylist(playlistId, songId, email);
         return ResponseEntity.ok(response);
     }
 }

@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PlaylistSongRepository extends JpaRepository<PlaylistSong, Long> {
     @Modifying
@@ -13,4 +15,8 @@ public interface PlaylistSongRepository extends JpaRepository<PlaylistSong, Long
     // Song_Id = go into song (existing property), then into id (property of Song), and delete by that id
         // deleteSongId = if PlaylistSong has a property songId
     void deleteBySong_Id(Long songId);
+
+    boolean existsByPlaylist_IdAndSong_Id(Long playlistId, Long songId);
+
+    List<PlaylistSong> findByPlaylist_IdOrderByPositionAsc(Long playlistId);
 }
