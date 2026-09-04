@@ -81,6 +81,25 @@ public class PlaylistServiceImpl implements PlaylistService {
         return new MessageResponse("Song added to playlist successfully");
     }
 
+    @Override
+    public MessageResponse removeSongFromPlaylist(Long playlistId, Long songId, String email) {
+        validatePlaylistAccess(playlistId, email);
+
+        PlaylistSong playlistSong = playlistSongRepository.findByPlaylist_IdAndSong_Id(playlistId, songId)
+                .orElseThrow(() -> new RuntimeException("Song not found in playlist with id: " + songId));
+        int removedPosition = playlistSong.getPosition();
+        playlistSongRepository.delete(playlistSong);
+        List<PlaylistSong> remainingSongs = playlistSongRepository.findByPlaylist_IdOrderByPositionAsc(playlistId);
+        for(PlaylistSong ps: remainingSongs){
+            if(ps.getPosition() > removedPosition){
+                ps.setPosition(ps.getPosition() - 1);
+                playlistSongRepository.save(ps);
+            }
+        }
+        return new MessageResponse("Song removed from playlist successfully");
+
+    }
+
     private AppUser getUserByEmail(String email) {
         return appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));

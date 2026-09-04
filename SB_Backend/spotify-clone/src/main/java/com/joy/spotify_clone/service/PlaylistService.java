@@ -11,4 +11,6 @@ public interface PlaylistService {
     PlaylistResponse updatePlaylistPrivacy(Long id, Boolean isPublic, String email);
 
     MessageResponse addSongToPlaylist(Long playlistId, Long songId, String email);
+
+    MessageResponse removeSongFromPlaylist(Long playlistId, Long songId, String email);
 }

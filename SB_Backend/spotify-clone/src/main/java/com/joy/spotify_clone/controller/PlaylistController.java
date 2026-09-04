@@ -54,4 +54,15 @@ public class PlaylistController {
         MessageResponse response = playlistService.addSongToPlaylist(playlistId, songId, email);
         return ResponseEntity.ok(response);
     }
+    @DeleteMapping("/removeSongFromPlaylist/{playlistId}")
+    public ResponseEntity<MessageResponse> removeSongFromPlaylist(
+            @PathVariable Long playlistId,
+            @RequestParam("songId") Long songId,
+            Authentication authentication
+    ){
+        String email = authentication.getName();
+        MessageResponse response = playlistService.removeSongFromPlaylist(playlistId, songId, email);
+        return ResponseEntity.ok(response);
+    }
+
 }
