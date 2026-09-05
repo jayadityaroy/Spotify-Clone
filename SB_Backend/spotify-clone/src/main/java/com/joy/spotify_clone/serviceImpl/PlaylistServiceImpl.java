@@ -100,6 +100,49 @@ public class PlaylistServiceImpl implements PlaylistService {
 
     }
 
+    @Override
+    public MessageResponse reorderSongInPlaylist(Long playlistId, Long songId, Integer newPosition, String email) {
+        validatePlaylistAccess(playlistId, email);
+        PlaylistSong playlistSong = playlistSongRepository.findByPlaylist_IdAndSong_Id(playlistId, songId)
+                .orElseThrow(() -> new RuntimeException("Song not found in playlist with id: " + songId));
+        List<PlaylistSong> allSongs = playlistSongRepository.findByPlaylist_IdOrderByPositionAsc(playlistId);
+        if(newPosition < 1 || newPosition > allSongs.size()){
+            throw new RuntimeException("Invalid new position: " + newPosition);
+        }
+        int currentPosition = playlistSong.getPosition();
+        if(newPosition == currentPosition){
+            return new MessageResponse("Song is already at the specified position");
+        }
+        else if(newPosition > currentPosition){
+            for(PlaylistSong ps: allSongs){
+                if(ps.getPosition() > currentPosition && ps.getPosition() <= newPosition){
+                    ps.setPosition(ps.getPosition() - 1);
+                    playlistSongRepository.save(ps);
+                }
+            }
+        }
+        else{
+            for(PlaylistSong ps: allSongs){
+                if(ps.getPosition() < currentPosition && ps.getPosition() >= newPosition){
+                    ps.setPosition(ps.getPosition() + 1);
+                    playlistSongRepository.save(ps);
+                }
+            }
+        }
+        playlistSong.setPosition(newPosition);
+        playlistSongRepository.save(playlistSong);
+        List<PlaylistSong> updatedSongs = playlistSongRepository.findByPlaylist_IdOrderByPositionAsc(playlistId);
+        int normalizedPosition = 1;
+        for(PlaylistSong ps: updatedSongs){
+            if(ps.getPosition() != normalizedPosition){
+                ps.setPosition(normalizedPosition);
+                playlistSongRepository.save(ps);
+            }
+            normalizedPosition++;
+        }
+        return new MessageResponse("Song position updated successfully to " + newPosition);
+    }
+
     private AppUser getUserByEmail(String email) {
         return appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
@@ -117,3 +160,54 @@ public class PlaylistServiceImpl implements PlaylistService {
         return playlist;
     }
 }
+/*
+Working of createPlaylist():
+1. Retrieve the AppUser entity for the given email (will be used to set the owner of the playlist).
+2. Create a new Playlist entity and set its name, description, isPublic status, and owner (AppUser), fetching the values from the PlaylistRequest object.
+3. If an image file is provided, generate a unique filename, save the image file to the server, and set the imageUrl field of the Playlist entity.
+4. Save the new Playlist entity to the repository.
+5. Return the PlaylistResponse object created from the saved Playlist entity.
+ */
+
+/*
+Working of updatePlaylistPrivacy():
+1. Validate the playlist access for the given playlistId and email.
+2. Update the isPublic field of the Playlist entity with the provided value.
+3. Save the updated Playlist entity to the repository.
+4. Return the updated PlaylistResponse object.
+ */
+
+/*
+Working of addSongToPlaylist():
+1. Validate the playlist access for the given playlistId and email.
+2. Retrieve the Song entity for the given songId.
+3. Check if the song already exists in the playlist using existsByPlaylist_IdAndSong_Id method of PlaylistSongRepository. If it does, throw an exception.
+4. Retrieve all existing songs in the playlist ordered by their position (ascending).
+5. Determine the new position for the song to be added. If there are no existing songs, set the position to 1. Otherwise, set the position to the last song's position + 1.
+6. Create a new PlaylistSong entity and set its playlist, song, and position.
+7. Save the new PlaylistSong entity to the repository.
+8. Return a message indicating the song has been added to the playlist successfully.
+ */
+
+/* Working of removeSongFromPlaylist():
+1. Validate the playlist access for the given playlistId and email.
+2. Retrieve the PlaylistSong entity for the given playlistId and songId.
+3. delete the PlaylistSong entity from the repository.
+4. Retrieve all remaining songs in the playlist ordered by their position (ascending).
+5. For each remaining song, if its position is greater than the removed song's position, decrement its position by 1 and save the updated entity back to the repository.
+6. Return a message indicating the song has been removed from the playlist successfully.
+ */
+
+/* Working of reorderSongInPlaylist():
+1. Validate the playlist access for the given playlistId and email.
+2. Retrieve the PlaylistSong entity for the given playlistId and songId.
+3. Retrieve all songs in the playlist ordered by their position (ascending).
+4. Check if the newPosition is valid (between 1 and the total number of songs).
+5. If the newPosition is the same as the current position, return a message indicating no change is needed.
+6. If the newPosition is greater than the current position, decrement the position of all songs that are between the current position and the new position.
+7. If the newPosition is less than the current position, increment the position of all songs that are between the new position and the current position.
+8. Update the position of the target song to the newPosition.
+9. Normalize the positions of all songs in the playlist to ensure they are sequential starting from 1.
+10. Return a message indicating the song position has been updated successfully.
+ */
+

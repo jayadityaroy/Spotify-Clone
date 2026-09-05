@@ -64,5 +64,16 @@ public class PlaylistController {
         MessageResponse response = playlistService.removeSongFromPlaylist(playlistId, songId, email);
         return ResponseEntity.ok(response);
     }
+    @PatchMapping("/reorderSongInPlalylist/{playlistId}")
+    public ResponseEntity<MessageResponse> reorderSongInPlaylist(
+            @PathVariable Long playlistId,
+            @RequestParam("songId")Long songId,
+            @RequestParam("newPosition") Integer newPosition,
+            Authentication authentication
+    ){
+        String email = authentication.getName();
+        MessageResponse response = playlistService.reorderSongInPlaylist(playlistId, songId, newPosition, email);
+        return ResponseEntity.ok(response);
+    }
 
 }

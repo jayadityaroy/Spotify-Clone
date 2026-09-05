@@ -13,4 +13,6 @@ public interface PlaylistService {
     MessageResponse addSongToPlaylist(Long playlistId, Long songId, String email);
 
     MessageResponse removeSongFromPlaylist(Long playlistId, Long songId, String email);
+
+    MessageResponse reorderSongInPlaylist(Long playlistId, Long songId, Integer newPosition, String email);
 }
