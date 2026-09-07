@@ -2,6 +2,7 @@ package com.joy.spotify_clone.service;
 
 import com.joy.spotify_clone.DTO.request.PlaylistRequest;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
+import com.joy.spotify_clone.DTO.response.PaginatedResponse;
 import com.joy.spotify_clone.DTO.response.PlaylistResponse;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,4 +16,6 @@ public interface PlaylistService {
     MessageResponse removeSongFromPlaylist(Long playlistId, Long songId, String email);
 
     MessageResponse reorderSongInPlaylist(Long playlistId, Long songId, Integer newPosition, String email);
+
+    PaginatedResponse<PlaylistResponse> getAllPublicPlaylists(int page, int size, String search);
 }

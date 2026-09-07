@@ -75,5 +75,13 @@ public class PlaylistController {
         MessageResponse response = playlistService.reorderSongInPlaylist(playlistId, songId, newPosition, email);
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/getAllPublicPlaylists")
+    public ResponseEntity<?> getAllPublicPlaylists(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(name = "search", required = false) String search
+    ){
+        return ResponseEntity.ok(playlistService.getAllPublicPlaylists(page, size, search));
+    }
 
 }

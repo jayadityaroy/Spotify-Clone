@@ -2,6 +2,7 @@ package com.joy.spotify_clone.serviceImpl;
 
 import com.joy.spotify_clone.DTO.request.PlaylistRequest;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
+import com.joy.spotify_clone.DTO.response.PaginatedResponse;
 import com.joy.spotify_clone.DTO.response.PlaylistResponse;
 import com.joy.spotify_clone.entity.AppUser;
 import com.joy.spotify_clone.entity.Playlist;
@@ -15,11 +16,15 @@ import com.joy.spotify_clone.service.PlaylistService;
 import com.joy.spotify_clone.util.FileHandlerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PlaylistServiceImpl implements PlaylistService {
@@ -141,6 +146,31 @@ public class PlaylistServiceImpl implements PlaylistService {
             normalizedPosition++;
         }
         return new MessageResponse("Song position updated successfully to " + newPosition);
+    }
+
+    @Override
+    public PaginatedResponse<PlaylistResponse> getAllPublicPlaylists(int page, int size, String search) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Playlist> playlistPage;
+
+        if(search != null && !search.trim().isEmpty()){
+            playlistPage = playlistRepository.findPublicPlaylistsWithSongsByNameOrDescription(search.trim(),pageable);
+        }
+        else{
+            playlistPage = playlistRepository.findPublicPlaylistsWithSongs(pageable);
+        }
+        List<PlaylistResponse> playlistResponses = playlistPage.getContent().stream()
+                .map(ps -> PlaylistResponse.fromEntity(ps, baseUrl))
+                .toList();
+        return new PaginatedResponse<>(
+                playlistResponses,
+                playlistPage.getNumber(),
+                playlistPage.getSize(),
+                playlistPage.getTotalElements(),
+                playlistPage.getTotalPages(),
+                playlistPage.isLast(),
+                playlistPage.isFirst()
+        );
     }
 
     private AppUser getUserByEmail(String email) {
