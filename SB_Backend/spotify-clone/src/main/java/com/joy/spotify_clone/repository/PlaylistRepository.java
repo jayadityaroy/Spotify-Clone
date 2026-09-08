@@ -14,6 +14,10 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
     @Query("SELECT DISTINCT p FROM Playlist p JOIN PlaylistSong ps ON p.id = ps.playlist.id WHERE p.isPublic = true")
     Page<Playlist> findPublicPlaylistsWithSongs(Pageable pageable);
+
+    Page<Playlist> findByAppUser_IdAndNameContainingIgnoreCaseOrAppUser_IdAndDescriptionContainingIgnoreCase(Long userId1, String name, Long userId2, String description, Pageable pageable);
+
+    Page<Playlist> findByAppUser_Id(Long userId, Pageable pageable);
 }
 // Working of findPublicPlaylistsWithSongsByNameOrDescription:
 // 1. The query selects distinct playlists (p) from the Playlist entity.

@@ -21,10 +21,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class PlaylistServiceImpl implements PlaylistService {
@@ -158,6 +156,31 @@ public class PlaylistServiceImpl implements PlaylistService {
         }
         else{
             playlistPage = playlistRepository.findPublicPlaylistsWithSongs(pageable);
+        }
+        List<PlaylistResponse> playlistResponses = playlistPage.getContent().stream()
+                .map(ps -> PlaylistResponse.fromEntity(ps, baseUrl))
+                .toList();
+        return new PaginatedResponse<>(
+                playlistResponses,
+                playlistPage.getNumber(),
+                playlistPage.getSize(),
+                playlistPage.getTotalElements(),
+                playlistPage.getTotalPages(),
+                playlistPage.isLast(),
+                playlistPage.isFirst()
+        );
+    }
+
+    @Override
+    public PaginatedResponse<PlaylistResponse> getMyPlaylists(String email, int page, int size, String search) {
+        AppUser appUser = getUserByEmail(email);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Playlist> playlistPage;
+        if(search != null && !search.trim().isEmpty()){
+            playlistPage = playlistRepository.findByAppUser_IdAndNameContainingIgnoreCaseOrAppUser_IdAndDescriptionContainingIgnoreCase(
+                    appUser.getId(), search.trim(), appUser.getId(), search.trim(), pageable);
+        }else{
+            playlistPage = playlistRepository.findByAppUser_Id(appUser.getId(), pageable);
         }
         List<PlaylistResponse> playlistResponses = playlistPage.getContent().stream()
                 .map(ps -> PlaylistResponse.fromEntity(ps, baseUrl))

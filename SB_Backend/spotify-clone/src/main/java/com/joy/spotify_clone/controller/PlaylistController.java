@@ -2,6 +2,7 @@ package com.joy.spotify_clone.controller;
 
 import com.joy.spotify_clone.DTO.request.PlaylistRequest;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
+import com.joy.spotify_clone.DTO.response.PaginatedResponse;
 import com.joy.spotify_clone.DTO.response.PlaylistResponse;
 import com.joy.spotify_clone.service.PlaylistService;
 import jakarta.validation.constraints.NotBlank;
@@ -82,6 +83,21 @@ public class PlaylistController {
             @RequestParam(name = "search", required = false) String search
     ){
         return ResponseEntity.ok(playlistService.getAllPublicPlaylists(page, size, search));
+    }
+    @GetMapping("/getMyPlaylists")
+    public ResponseEntity<?> getMyPalylists(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "search", required = false) String search,
+            Authentication authentication
+    )
+    {
+        if(authentication == null){
+            return ResponseEntity.status(401).body("Unauthorized: Please log in to access your playlists.");
+        }
+        String email = authentication.getName();
+        PaginatedResponse<PlaylistResponse> response = playlistService.getMyPlaylists(email, page, size, search);
+        return ResponseEntity.ok(response);
     }
 
 }
