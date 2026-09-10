@@ -4,6 +4,7 @@ import com.joy.spotify_clone.DTO.request.PlaylistRequest;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.DTO.response.PaginatedResponse;
 import com.joy.spotify_clone.DTO.response.PlaylistResponse;
+import com.joy.spotify_clone.DTO.response.PlaylistWithSongsResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface PlaylistService {
@@ -20,4 +21,6 @@ public interface PlaylistService {
     PaginatedResponse<PlaylistResponse> getAllPublicPlaylists(int page, int size, String search);
 
     PaginatedResponse<PlaylistResponse> getMyPlaylists(String email, int page, int size, String search);
+
+    PlaylistWithSongsResponse getPlaylistWithSongs(Long playlistId, String email);
 }

@@ -4,6 +4,7 @@ import com.joy.spotify_clone.DTO.request.PlaylistRequest;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.DTO.response.PaginatedResponse;
 import com.joy.spotify_clone.DTO.response.PlaylistResponse;
+import com.joy.spotify_clone.DTO.response.PlaylistWithSongsResponse;
 import com.joy.spotify_clone.service.PlaylistService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -97,6 +98,16 @@ public class PlaylistController {
         }
         String email = authentication.getName();
         PaginatedResponse<PlaylistResponse> response = playlistService.getMyPlaylists(email, page, size, search);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/getPlaylistWithSongs/{playlistId}")
+    public ResponseEntity<PlaylistWithSongsResponse> getPlaylistWithSongs(
+            @PathVariable Long playlistId,
+            Authentication authentication
+    ){
+        String email = authentication.getName();
+        PlaylistWithSongsResponse response = playlistService.getPlaylistWithSongs(playlistId, email);
         return ResponseEntity.ok(response);
     }
 

@@ -4,6 +4,7 @@ import com.joy.spotify_clone.DTO.request.PlaylistRequest;
 import com.joy.spotify_clone.DTO.response.MessageResponse;
 import com.joy.spotify_clone.DTO.response.PaginatedResponse;
 import com.joy.spotify_clone.DTO.response.PlaylistResponse;
+import com.joy.spotify_clone.DTO.response.PlaylistWithSongsResponse;
 import com.joy.spotify_clone.entity.AppUser;
 import com.joy.spotify_clone.entity.Playlist;
 import com.joy.spotify_clone.entity.PlaylistSong;
@@ -194,6 +195,20 @@ public class PlaylistServiceImpl implements PlaylistService {
                 playlistPage.isLast(),
                 playlistPage.isFirst()
         );
+    }
+
+    @Override
+    public PlaylistWithSongsResponse getPlaylistWithSongs(Long playlistId, String email) {
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new RuntimeException("Playlist not found with id: " + playlistId));
+        if(!playlist.getIsPublic()){
+            if(email == null){
+                throw new RuntimeException("Unauthorized: Please log in to access this private playlist.");
+            }
+            playlist = validatePlaylistAccess(playlistId, email);
+        }
+        List<PlaylistSong> playlistSongs = playlistSongRepository.findByPlaylist_IdOrderByPositionAsc(playlistId);
+        return PlaylistWithSongsResponse.fromEntity(playlist, playlistSongs, baseUrl);
     }
 
     private AppUser getUserByEmail(String email) {
